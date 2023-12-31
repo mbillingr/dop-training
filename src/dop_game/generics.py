@@ -169,6 +169,37 @@ def _(obj: tuple):
     return not obj
 
 
+@functools.singledispatch
+def merge(data1, data2):
+    if data2 is None:
+        return data1
+    else:
+        return data2
+
+
+@merge.register
+def _(data1: dict, data2: dict):
+    out = {}
+    for k in union(keys(data1), keys(data2)):
+        a = data1.get(k)
+        b = data2.get(k)
+        out[k] = merge(a, b)
+    return out
+
+
+@merge.register
+def _(data1: list, data2: list):
+    out = []
+    m = min(len(data1), len(data2))
+    for a, b in zip(data1[:m], data2[:m]):
+        out.append(merge(a, b))
+    if len(data1) > len(data2):
+        out.extend(data1[m:])
+    else:
+        out.extend(data2[m:])
+    return out
+
+
 def diff(data1, data2):
     if is_object(data1) and is_object(data2):
         return _diff(data1, data2)

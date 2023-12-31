@@ -68,6 +68,23 @@ def test_sum():
     assert _.sum(["a", "b", "c"], "x") == "xabc"
 
 
+def test_merge():
+    assert _.merge({}, {}) == {}
+    assert _.merge([], []) == []
+
+    assert _.merge({"a": 1}, {}) == {"a": 1}
+    assert _.merge({}, {"a": 1}) == {"a": 1}
+    assert _.merge({"a": 1}, {"a": 2}) == {"a": 2}
+    assert _.merge({"a": 1}, {"b": 2}) == {"a": 1, "b": 2}
+
+    assert _.merge([1], []) == [1]
+    assert _.merge([], [1]) == [1]
+    assert _.merge([1], [2]) == [2]
+    assert _.merge([1], [None, 2]) == [1, 2]
+
+    assert _.merge({"a": [{}, {}]}, {"a": [{"x": 1}]}) == {"a": [{"x": 1}, {}]}
+
+
 def test_diff_dict():
     assert _.diff({"a": 1}, {"a": 1}) == {}
     assert _.diff({"a": 1}, {"a": 2}) == {"a": 2}
