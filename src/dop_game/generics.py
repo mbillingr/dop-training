@@ -211,7 +211,7 @@ def diff(data1, data2):
 
 def _diff(data1, data2):
     empty = type(data1)()
-    if data1 == data2:
+    if data1 is data2:
         return empty
 
     def red(acc, k):
