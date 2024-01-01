@@ -1,27 +1,31 @@
 from datetime import timedelta, datetime
 
 from dop_game.core_types import SystemId, PlayerId, BuildingId, ShipId
-from dop_game import generics as _
+from dop_game import generics as _, star_system
 from dop_game.math_helpers import fibonacci
 
 
 def get_owning_player(game_data, system_id: SystemId) -> PlayerId | None:
-    return _.get(game_data, ["star_systems_by_id", system_id, "owning_player"])
+    system = get_system(game_data, system_id)
+    return star_system.get_owning_player(system)
 
 
-def list_buildings(game_data, system_id: SystemId):
-    return _.get(game_data, ["star_systems_by_id", system_id, "buildings"])
+def list_buildings(game_data, system_id: SystemId) -> dict[BuildingId, int]:
+    system = get_system(game_data, system_id)
+    return star_system.list_buildings(system)
 
 
-def list_ships(game_data, system_id: SystemId):
-    return _.get(game_data, ["star_systems_by_id", system_id, "ships"])
+def list_ships(game_data, system_id: SystemId) -> dict[ShipId, int]:
+    system = get_system(game_data, system_id)
+    return star_system.list_ships(system)
 
 
 def get_production_status(game_data, user_id: PlayerId, system_id: SystemId):
-    if get_owning_player(game_data, system_id) != user_id:
+    system = get_system(game_data, system_id)
+    if star_system.get_owning_player(system) != user_id:
         # can't view other players' production status
         return None
-    return _.get(game_data, ["star_systems_by_id", system_id, "building_slot"])
+    return star_system.get_production_status(system)
 
 
 def build_infrastructure(
@@ -33,16 +37,10 @@ def build_infrastructure(
     if get_production_status(game_data, user_id, system_id):
         # only one concurrent production allowed
         return
-    system = _.get(game_data, ["star_systems_by_id", system_id])
 
-    n_built = _.sum(_.get(system, ["buildings"]))
-    duration = timedelta(minutes=fibonacci(n_built))
-    eta = datetime.now() + duration
-
-    event_out = {"eta": eta, "kind": building_id}
-    system_out = _.set(system, ["building_slot"], event_out)
-    game_data_out = _.set(game_data, ["star_systems_by_id", system_id], system_out)
-    return game_data_out
+    system = get_system(game_data, system_id)
+    system_out = star_system.build_infrastructure(system, building_id)
+    return _.set(game_data, ["star_systems_by_id", system_id], system_out)
 
 
 def build_ship(game_data, user_id: PlayerId, system_id: SystemId, ship_id: ShipId):
@@ -69,3 +67,7 @@ def get_home_system(game_data, player_id: PlayerId) -> SystemId:
 
 def list_fleets(game_data, player_id: PlayerId):
     raise NotImplementedError()
+
+
+def get_system(game_data, system_id: SystemId):
+    return _.get(game_data, ["star_systems_by_id", system_id])
